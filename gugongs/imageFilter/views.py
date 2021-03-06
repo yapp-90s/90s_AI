@@ -18,24 +18,28 @@ def helloAPI(request):
 
 @csrf_exempt
 @api_view(['POST'])
-def download(request):
+def apply(request):
     data = JSONParser().parse(request)
     film_uid = data['film_uid']
     photo_uid = data['photo_uid']
-    s3 = boto3.client('s3')
 
-    # 버킷 이름 / 다운로드 할 객체 지정 / 다운로드할 위치와 파일명
-    s3.download_file(AWS_STORAGE_BUCKET_NAME,
+    try:
+        s3 = boto3.client('s3')
+        # 버킷 이름 / 다운로드 할 객체 지정 / 다운로드할 위치와 파일명
+        s3.download_file(AWS_STORAGE_BUCKET_NAME,
                      '%d/%d.jpeg' % (film_uid, photo_uid),
                      '%d.jpeg' % photo_uid)
+        image = cv2.imread("%d.jpeg" % photo_uid, 1)  # 1 color, 2 grayscale, -1 alpha channel 포함
+        cv2.imwrite("%d_edited.jpeg" % photo_uid, gammaImage(image, 1.5))
 
-    image = cv2.imread("%d.jpeg" % photo_uid, 1)  # 1 color, 2 grayscale, -1 alpha channel 포함
-    cv2.imwrite("%d_edited.jpeg" % photo_uid, gammaImage(image, 1.5))
-
-    # 업로드 할 파일 / 버킷 이름 / 업로드될 객체
-    s3.upload_file('%d_edited.jpeg' % photo_uid,
+        # 업로드 할 파일 / 버킷 이름 / 업로드될 객
+        s3.upload_file('%d_edited.jpeg' % photo_uid,
                    AWS_STORAGE_BUCKET_NAME,
                    '%d/%d_edited.jpeg' % (film_uid, photo_uid))
+        return Response(True)
+
+    except:
+        return Response(False)
 
 
 def spreadLookupTable(x, y):

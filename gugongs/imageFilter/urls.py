@@ -1,7 +1,6 @@
-from django.urls import path, include
-from .views import helloAPI, download
+from django.urls import path
+from .views import apply
 
 urlpatterns = [
-    path("hello/", helloAPI),
-    path("download/", download)
+    path("apply/", apply)
 ]
