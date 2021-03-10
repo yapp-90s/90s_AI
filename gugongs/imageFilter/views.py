@@ -11,33 +11,43 @@ import os
 
 
 @csrf_exempt
-@api_view(['GET'])
-def helloAPI(request):
-    return Response("hello world")
-
-
-@csrf_exempt
 @api_view(['POST'])
 def apply(request):
     data = JSONParser().parse(request)
     film_uid = data['film_uid']
     photo_uid = data['photo_uid']
 
+
+    #사진 저장 경로
+    current_dir = os.getcwd()
+    save_dir = os.path.join(current_dir, 'imageFilter', 'images')  # current/imageFilter/images
+    before_img = save_dir + '/%d.jpeg' % photo_uid
+    after_img = save_dir + '/%d_edited.jpeg' % photo_uid
+
     try:
         s3 = boto3.client('s3')
+
         # 버킷 이름 / 다운로드 할 객체 지정 / 다운로드할 위치와 파일명
         s3.download_file(AWS_STORAGE_BUCKET_NAME,
-                     '%d/%d.jpeg' % (film_uid, photo_uid),
-                     '%d.jpeg' % photo_uid)
-        image = cv2.imread("%d.jpeg" % photo_uid, 1)  # 1 color, 2 grayscale, -1 alpha channel 포함
-        cv2.imwrite("%d_edited.jpeg" % photo_uid, gammaImage(image, 1.5))
+                         '%d/%d.jpeg' % (film_uid, photo_uid),
+                         before_img)
 
-        # 업로드 할 파일 / 버킷 이름 / 업로드될 객
-        s3.upload_file('%d_edited.jpeg' % photo_uid,
-                   AWS_STORAGE_BUCKET_NAME,
-                   '%d/%d_edited.jpeg' % (film_uid, photo_uid))
+
+        # 필터 적용
+        image = cv2.imread(before_img, 1)  # 1 color, 2 grayscale, -1 alpha channel 포함
+        cv2.imwrite(after_img, gammaImage(image, 1.5))
+
+        # 업로드 할 파일 / 버킷 이름 / 업로드될 객체
+        s3.upload_file(after_img,
+                       AWS_STORAGE_BUCKET_NAME,
+                       '%d/%d_edited.jpeg' % (film_uid, photo_uid))
+
+        # 처리 끝난 이미지 프로젝트에서 삭제
+        if os.path.exists(before_img):
+            os.remove(before_img)
+        if os.path.exists(after_img):
+            os.remove(after_img)
         return Response(True)
-
     except:
         return Response(False)
 
