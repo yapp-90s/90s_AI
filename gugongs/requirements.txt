@@ -1,0 +1,9 @@
+Django
+django-storages
+djangorestframework
+matplotlib
+numpy
+scipy
+opencv-python
+boto3
+awscli
