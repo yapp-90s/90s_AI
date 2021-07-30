@@ -16,6 +16,7 @@ def apply(request):
 
 
     data = JSONParser().parse(request)
+    film_code = data['film_code']
     film_uid = data['film_uid']
     photo_uid = data['photo_uid']
 
@@ -41,7 +42,19 @@ def apply(request):
 
         # 필터 적용
         image = cv2.imread(before_img, 1)  # 1 color, 2 grayscale, -1 alpha channel 포함
-        cv2.imwrite(after_img, gammaImage(image, 1.5))
+
+        if film_code == 1001:
+            cv2.imwrite(after_img, gammaImage(image, 1.5))
+        elif film_code == 1002:
+            cv2.imwrite(after_img, warmImage(image, 1.5))
+        elif film_code == 1003:
+            cv2.imwrite(after_img, coldImage(image, 1.5))
+        else:
+            cv2.imwrite(after_img, guassian(image, 1.5))
+                
+        
+
+        
 
         # 업로드 할 파일 / 버킷 이름 / 업로드될 객체
         s3.upload_file(after_img,
