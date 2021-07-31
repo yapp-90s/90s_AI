@@ -37,7 +37,7 @@ def apply(request):
         s3.download_file(AWS_STORAGE_BUCKET_NAME,
                             '%d/%d.jpeg' % (film_uid, photo_uid),
                             before_img)
-                            
+        
         print("5555")
 
         # 필터 적용
@@ -57,9 +57,10 @@ def apply(request):
         
 
         # 업로드 할 파일 / 버킷 이름 / 업로드될 객체
-        s3.upload_file(after_img,
-                        AWS_STORAGE_BUCKET_NAME,
-                        '%d/%d_edited.jpeg' % (film_uid, photo_uid))
+        s3.Object(AWS_STORAGE_BUCKET_NAME, '%d/%d_orgin.jpeg' % (film_uid, photo_uid)).copy_from(CopySource='%d/%d.jpeg' % (film_uid, photo_uid))
+        s3.Object(AWS_STORAGE_BUCKET_NAME, '%d/%d.jpeg' % (film_uid, photo_uid)).delete()
+        
+        s3.upload_file(after_img,AWS_STORAGE_BUCKET_NAME, '%d/%d.jpeg' % (film_uid, photo_uid))
 
         # 처리 끝난 이미지 프로젝트에서 삭제
         if os.path.exists(before_img):
