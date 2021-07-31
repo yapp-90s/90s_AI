@@ -28,48 +28,55 @@ def apply(request):
 
 
 
-    try:
-        s3 = boto3.client('s3',
-            aws_access_key_id=AWS_ACCESS_KEY_ID,
-            aws_secret_access_key= AWS_SECRET_ACCESS_KEY)
+    # try:
+    s3 = boto3.client('s3',
+        aws_access_key_id=AWS_ACCESS_KEY_ID,
+        aws_secret_access_key= AWS_SECRET_ACCESS_KEY)
 
-        # 버킷 이름 / 다운로드 할 객체 지정 / 다운로드할 위치와 파일명
-        s3.download_file(AWS_STORAGE_BUCKET_NAME,
-                            '%d/%d.jpeg' % (film_uid, photo_uid),
-                            before_img)
-        
-        print("5555")
+    # 버킷 이름 / 다운로드 할 객체 지정 / 다운로드할 위치와 파일명
+    s3.download_file(AWS_STORAGE_BUCKET_NAME,
+                        '%d/%d.jpeg' % (film_uid, photo_uid),
+                        before_img)
+    
+    print("5555")
 
-        # 필터 적용
-        image = cv2.imread(before_img, 1)  # 1 color, 2 grayscale, -1 alpha channel 포함
+    # 필터 적용
+    image = cv2.imread(before_img, 1)  # 1 color, 2 grayscale, -1 alpha channel 포함
 
-        if film_code == 1001:
-            cv2.imwrite(after_img, gammaImage(image, 1.5))
-        elif film_code == 1002:
-            cv2.imwrite(after_img, warmImage(image, 1.5))
-        elif film_code == 1003:
-            cv2.imwrite(after_img, coldImage(image, 1.5))
-        else:
-            cv2.imwrite(after_img, guassian(image, 1.5))
-                
-        
+    if film_code == 1001:
+        cv2.imwrite(after_img, gammaImage(image, 1.5))
+    elif film_code == 1002:
+        cv2.imwrite(after_img, warmImage(image))
+    elif film_code == 1003:
+        cv2.imwrite(after_img, coldImage(image))
+    else:
+        cv2.imwrite(after_img, guassian(image))
+            
+    
 
-        
+    
 
-        # 업로드 할 파일 / 버킷 이름 / 업로드될 객체
-        s3.Object(AWS_STORAGE_BUCKET_NAME, '%d/%d_orgin.jpeg' % (film_uid, photo_uid)).copy_from(CopySource='%d/%d.jpeg' % (film_uid, photo_uid))
-        s3.Object(AWS_STORAGE_BUCKET_NAME, '%d/%d.jpeg' % (film_uid, photo_uid)).delete()
-        
-        s3.upload_file(after_img,AWS_STORAGE_BUCKET_NAME, '%d/%d.jpeg' % (film_uid, photo_uid))
+    # 업로드 할 파일 / 버킷 이름 / 업로드될 객체
+    # client.copy_object(Bucket="BucketName", CopySource="BucketName/OriginalName", Key="NewName")
+    # client.delete_object(Bucket="BucketName", Key="OriginalName")
+    # copy_source = {'Bucket': 'source__bucket', 'Key': 'my_folder/my_file'}
 
-        # 처리 끝난 이미지 프로젝트에서 삭제
-        if os.path.exists(before_img):
-            os.remove(before_img)
-        if os.path.exists(after_img):
-            os.remove(after_img)
-        return Response(True)
-    except:
-        return Response(False)
+    s3.copy_object(
+        Bucket=AWS_STORAGE_BUCKET_NAME, 
+        CopySource={'Bucket' : AWS_STORAGE_BUCKET_NAME, 'Key': '%d/%d.jpeg' % (film_uid, photo_uid)},
+        Key='%d/%d_orgin.jpeg' % (film_uid, photo_uid))
+    s3.delete_object(Bucket=AWS_STORAGE_BUCKET_NAME, Key='%d/%d.jpeg' % (film_uid, photo_uid))
+    
+    s3.upload_file(after_img,AWS_STORAGE_BUCKET_NAME, '%d/%d.jpeg' % (film_uid, photo_uid))
+
+    # 처리 끝난 이미지 프로젝트에서 삭제
+    if os.path.exists(before_img):
+        os.remove(before_img)
+    if os.path.exists(after_img):
+        os.remove(after_img)
+    return Response(True)
+    # except:
+    #     return Response(False)
 
 
 def spreadLookupTable(x, y):
