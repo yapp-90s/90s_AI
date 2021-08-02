@@ -57,10 +57,6 @@ def apply(request):
     
 
     # 업로드 할 파일 / 버킷 이름 / 업로드될 객체
-    # client.copy_object(Bucket="BucketName", CopySource="BucketName/OriginalName", Key="NewName")
-    # client.delete_object(Bucket="BucketName", Key="OriginalName")
-    # copy_source = {'Bucket': 'source__bucket', 'Key': 'my_folder/my_file'}
-
     s3.copy_object(
         Bucket=AWS_STORAGE_BUCKET_NAME, 
         CopySource={'Bucket' : AWS_STORAGE_BUCKET_NAME, 'Key': '%d/%d.jpeg' % (film_uid, photo_uid)},
