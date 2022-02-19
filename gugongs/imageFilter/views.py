@@ -18,6 +18,13 @@ def apply(request):
 
     data = JSONParser().parse(request)
 
+    # Example
+    # film_code : 1001
+    # s3_file_path : /66/
+    # before_file_name : ORG_66.png
+    # after_file_name : DECORATED_66.png
+
+
     film_code = data['film_code']
     s3_file_path = data['s3_file_path']
     before_file_name = data['before_file_name']
